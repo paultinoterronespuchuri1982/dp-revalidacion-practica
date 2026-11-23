@@ -34,6 +34,16 @@
   .progress { height:8px; background:var(--line); border-radius:4px; overflow:hidden; margin-bottom:12px; }
   .progress > div { height:100%; background:var(--accent); width:0; transition:width .3s; }
   table { width:100%; border-collapse:collapse; font-size:.93rem; }
+  .card { overflow-x:auto; }
+  @media (max-width: 600px) {
+    header h1 { font-size:1.1rem; }
+    main { padding:10px; }
+    .card { padding:14px; }
+    .row { flex-direction:column; align-items:stretch; }
+    .row .btn, .row .btn.secondary { width:100%; }
+    .row .note { text-align:center; }
+    .score-big { font-size:1.8rem; }
+  }
   th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
   th { color:var(--muted); font-weight:600; }
   .bar { height:10px; background:var(--accent); border-radius:5px; }
