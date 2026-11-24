@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { PREGUNTAS } from "../data/preguntas";
-import { PREGUNTAS_PT } from "../data/preguntas_pt";
+import { PRACTICOS } from "../data/practicos";
 import { CASOS } from "../data/casos";
 import { CIRCULARES } from "../data/circulares";
 import { MODULOS } from "../data/modulos";
@@ -13,13 +12,6 @@ const LETRAS = ["A", "B", "C", "D"];
 // Nombre del módulo en el idioma pedido (cae al español si falta).
 function nombre(m, lang) {
   return m?.nombre[lang] ?? m?.nombre.es ?? "";
-}
-
-// Devuelve el texto de una pregunta en el idioma pedido (cae al español si falta).
-function textos(lang, item) {
-  if (item.caso !== undefined) return item; // ya viene resuelto para el idioma
-  if (lang === "pt" && PREGUNTAS_PT[item.q]) return { ...item, ...PREGUNTAS_PT[item.q] };
-  return item;
 }
 
 function construirLista(modo, lang) {
@@ -46,7 +38,15 @@ function construirLista(modo, lang) {
       fuente: c.fuente,
     }));
   }
-  return PREGUNTAS.map((p, id) => ({ ...textos(lang, p), id, m: p.m, a: p.a }));
+  return PRACTICOS.map((p, id) => ({
+    id,
+    m: p.m,
+    a: p.a,
+    caso: (p[lang] ?? p.es).caso,
+    q: (p[lang] ?? p.es).q,
+    o: (p[lang] ?? p.es).o,
+    e: (p[lang] ?? p.es).e,
+  }));
 }
 
 export default function Quiz({ lang }) {
