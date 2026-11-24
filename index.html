@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Evaluador DP – Práctica de revalidación</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root { --bg:#f5f7fa; --card:#fff; --ink:#1d2430; --muted:#5b6674; --accent:#1f5fa8; --ok:#1e7b4a; --bad:#b03a2e; --line:#dde3ea; }
   * { box-sizing: border-box; }
@@ -90,7 +93,28 @@
   .score-big { font-size:3rem; background:linear-gradient(90deg,#00c2d1,#f97ae6); -webkit-background-clip:text; background-clip:text; color:transparent; }
   #result { text-align:center; }
   #result table { text-align:left; }
-  @media (prefers-reduced-motion: reduce) { * { transition:none !important; } }
+  @media (prefers-reduced-motion: reduce) { * { transition:none !important; animation:none !important; } }
+
+  /* ===== Capa 2: tipografía, vidrio y movimiento ===== */
+  body { font-family:"Inter", system-ui, -apple-system, sans-serif; font-size:clamp(15px, 0.9rem + 0.2vw, 16px); }
+  h1, h2, h3, .score-big, .q-text { font-family:"Sora", "Inter", sans-serif; letter-spacing:-.01em; }
+  header h1 { font-size:clamp(1.25rem, 1rem + 1.2vw, 1.9rem); }
+  .q-text { font-size:clamp(1.05rem, .95rem + .5vw, 1.3rem); }
+  .card { background:color-mix(in srgb, var(--card) 85%, transparent); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+  nav.tabs { position:sticky; top:0; z-index:10; padding:10px 0; background:color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+  .opt { position:relative; display:flex; align-items:center; gap:12px; font-size:clamp(.95rem, .9rem + .2vw, 1.05rem); }
+  .opt .key { flex:0 0 auto; width:28px; height:28px; border-radius:8px; display:grid; place-items:center; font-weight:700; font-size:.85rem; background:rgba(255,255,255,.08); color:#c9b8ff; }
+  .opt.correct .key { background:var(--ok); color:#06210f; }
+  .opt.wrong .key { background:var(--bad); color:#fff; }
+  .opt:focus-visible, .btn:focus-visible, nav.tabs button:focus-visible { outline:3px solid rgba(0,194,209,.7); outline-offset:2px; }
+  .fade-in { animation: fadeUp .35s ease both; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+  .feedback.ok, .feedback.bad { animation: pop .3s ease both; }
+  @keyframes pop { from { opacity:0; transform:scale(.97); } to { opacity:1; transform:none; } }
+  .progress > div { transition: width .45s cubic-bezier(.2,.8,.2,1); }
+  .hint { font-size:.8rem; color:var(--muted); margin-top:10px; }
+  .hint kbd { background:rgba(255,255,255,.08); border:1px solid var(--line); border-radius:6px; padding:1px 6px; font-family:inherit; }
+  @media (max-width:600px) { nav.tabs { justify-content:center; } .hint { display:none; } }
 </style>
 </head>
 <body>
@@ -112,6 +136,7 @@
       <p class="q-text" id="qtext"></p>
       <div id="opts"></div>
       <div id="fb" class="feedback hidden"></div>
+      <div class="hint">Atajos: <kbd>1</kbd>–<kbd>4</kbd> responder · <kbd>Enter</kbd> siguiente · <kbd>←</kbd> <kbd>→</kbd> navegar</div>
       <div class="row">
         <button class="btn secondary" id="prev" onclick="move(-1)">Anterior</button>
         <span class="note" id="qscore"></span>
@@ -318,7 +343,8 @@ function render(){
   item.o.forEach((txt,i)=>{
     const b = document.createElement('button');
     b.className = 'opt';
-    b.textContent = String.fromCharCode(65+i)+'. '+txt;
+    b.innerHTML = '<span class="key">'+String.fromCharCode(65+i)+'</span><span class="txt"></span>';
+    b.querySelector('.txt').textContent = txt;
     const chosen = answers[idx];
     if(chosen!==null){
       b.disabled = true;
@@ -340,7 +366,9 @@ function render(){
   document.getElementById('prev').disabled = idx===0;
   document.getElementById('next').textContent = idx===Q.length-1 ? 'Ver resultado' : 'Siguiente';
   document.getElementById('result').classList.add('hidden');
-  document.querySelector('#view-quiz > .card').classList.remove('hidden');
+  const qc = document.querySelector('#view-quiz > .card');
+  qc.classList.remove('hidden');
+  qc.classList.remove('fade-in'); void qc.offsetWidth; qc.classList.add('fade-in');
 }
 
 function choose(i){
@@ -385,6 +413,13 @@ function restart(){
   render();
 }
 
+document.addEventListener('keydown', (e) => {
+  const quizVisible = !document.getElementById('view-quiz').classList.contains('hidden');
+  if(!quizVisible || document.getElementById('result').classList.contains('hidden') === false) return;
+  if(/^[1-4]$/.test(e.key)) { const n = Number(e.key)-1; if(n < Q[idx].o.length) choose(n); }
+  else if(e.key === 'Enter' || e.key === 'ArrowRight') { if(answers[idx] !== null || e.key === 'ArrowRight') move(1); }
+  else if(e.key === 'ArrowLeft') move(-1);
+});
 render();
 </script>
 </body>
