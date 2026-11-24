@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { PRACTICOS } from "../data/practicos";
 import { INTEGRADOS } from "../data/integrados";
 import { MATERIALES } from "../data/materiales";
+import { PDF_EXPERTO } from "../data/pdfexperto";
 import { CASOS } from "../data/casos";
 import { CIRCULARES } from "../data/circulares";
 import { MODULOS } from "../data/modulos";
@@ -40,7 +41,7 @@ function construirLista(modo, lang) {
       fuente: c.fuente,
     }));
   }
-  return [...PRACTICOS, ...INTEGRADOS, ...MATERIALES].map((p, id) => ({
+  return [...PRACTICOS, ...INTEGRADOS, ...MATERIALES, ...PDF_EXPERTO].map((p, id) => ({
     id,
     m: p.m,
     a: p.a,
