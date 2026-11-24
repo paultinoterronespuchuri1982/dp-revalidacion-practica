@@ -2,11 +2,38 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PREGUNTAS } from "../data/preguntas";
+import { PREGUNTAS_PT } from "../data/preguntas_pt";
+import { CASOS } from "../data/casos";
 import { MODULOS } from "../data/modulos";
+import { t } from "../data/i18n";
 
 const LETRAS = ["A", "B", "C", "D"];
 
-export default function Quiz() {
+// Devuelve el texto de una pregunta en el idioma pedido (cae al español si falta).
+function textos(lang, item) {
+  if (item.caso !== undefined) return item; // ya viene resuelto para el idioma
+  if (lang === "pt" && PREGUNTAS_PT[item.q]) return { ...item, ...PREGUNTAS_PT[item.q] };
+  return item;
+}
+
+function construirLista(modo, lang) {
+  if (modo === "casos") {
+    return CASOS.map((c, i) => ({
+      id: 1000 + i,
+      m: c.m,
+      a: c.a,
+      caso: c[lang].caso,
+      q: c[lang].q,
+      o: c[lang].o,
+      e: c[lang].e,
+      fuente: c.fuente,
+    }));
+  }
+  return PREGUNTAS.map((p, id) => ({ ...textos(lang, p), id, m: p.m, a: p.a }));
+}
+
+export default function Quiz({ lang }) {
+  const [modo, setModo] = useState("preguntas");
   const [modulo, setModulo] = useState("todos");
   const [idx, setIdx] = useState(0);
   const [resp, setResp] = useState({});
@@ -14,16 +41,17 @@ export default function Quiz() {
 
   const lista = useMemo(
     () =>
-      PREGUNTAS.map((q, id) => ({ ...q, id })).filter(
+      construirLista(modo, lang).filter(
         (q) => modulo === "todos" || q.m === Number(modulo),
       ),
-    [modulo],
+    [modo, modulo, lang],
   );
 
   const actual = lista[idx];
   const respondida = actual ? resp[actual.id] !== undefined : false;
 
-  function reiniciar(nuevoModulo = modulo) {
+  function reiniciar(nuevoModo = modo, nuevoModulo = modulo) {
+    setModo(nuevoModo);
     setModulo(nuevoModulo);
     setIdx(0);
     setResp({});
@@ -44,7 +72,7 @@ export default function Quiz() {
     if (idx > 0) setIdx(idx - 1);
   }
 
-  // Atajos de teclado: 1-4 responder, Enter/→ siguiente, ← anterior
+  // Atajos: 1-4 responder, Enter (si ya respondiste) o → siguiente, ← anterior
   useEffect(() => {
     function onKey(e) {
       if (fin || !actual) return;
@@ -57,98 +85,130 @@ export default function Quiz() {
     return () => window.removeEventListener("keydown", onKey);
   });
 
-  if (fin) return <Resultado lista={lista} resp={resp} onReiniciar={() => reiniciar()} />;
+  // Cambiar de idioma conserva el progreso: se recalcula la lista con el nuevo idioma
+  // y las respuestas siguen siendo válidas porque el id no cambia.
 
-  if (!actual) {
-    return <p className="vacio">No hay preguntas en este módulo.</p>;
+  if (fin) {
+    return (
+      <Resultado
+        lang={lang}
+        lista={lista}
+        resp={resp}
+        onReiniciar={() => reiniciar()}
+      />
+    );
   }
 
-  const progreso = ((idx + 1) / lista.length) * 100;
-  const modNombre = MODULOS.find((m) => m.id === actual.m)?.nombre ?? "";
+  const nombreModulo = (id) => MODULOS.find((m) => m.id === id)?.nombre[lang] ?? "";
+  const progreso = lista.length ? ((idx + 1) / lista.length) * 100 : 0;
 
   return (
     <section className="quiz" aria-live="polite">
       <div className="toolbar">
+        <div className="seg" role="group" aria-label={t(lang, "modoPreguntas")}>
+          <button
+            type="button"
+            className={modo === "preguntas" ? "on" : ""}
+            onClick={() => reiniciar("preguntas", "todos")}
+          >
+            {t(lang, "modoPreguntas")}
+          </button>
+          <button
+            type="button"
+            className={modo === "casos" ? "on" : ""}
+            onClick={() => reiniciar("casos", "todos")}
+          >
+            {t(lang, "modoCasos")}
+          </button>
+        </div>
         <label className="select-wrap">
-          <span>Módulo</span>
-          <select value={modulo} onChange={(e) => reiniciar(e.target.value)}>
-            <option value="todos">Todos (100)</option>
+          <span>{t(lang, "modulo")}</span>
+          <select value={modulo} onChange={(e) => reiniciar(modo, e.target.value)}>
+            <option value="todos">{t(lang, "todos")}</option>
             {MODULOS.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.id}. {m.nombre}
+                {m.id}. {m.nombre[lang]}
               </option>
             ))}
           </select>
         </label>
-        <span className="contador">
-          {idx + 1} / {lista.length}
-        </span>
       </div>
 
-      <div className="progreso" aria-hidden="true">
-        <div style={{ width: `${progreso}%` }} />
-      </div>
-
-      <article className="tarjeta fade-in" key={actual.id}>
-        <span className="chip">Módulo {actual.m} · {modNombre}</span>
-        <h2 className="pregunta">{actual.q}</h2>
-
-        <div className="opciones">
-          {actual.o.map((texto, i) => {
-            const elegida = resp[actual.id] === i;
-            const correcta = actual.a === i;
-            let estado = "";
-            if (respondida) {
-              if (correcta) estado = "correcta";
-              else if (elegida) estado = "incorrecta";
-            }
-            return (
-              <button
-                key={i}
-                type="button"
-                className={`opcion ${estado}`}
-                disabled={respondida}
-                onClick={() => elegir(i)}
-              >
-                <span className="letra">{LETRAS[i]}</span>
-                <span>{texto}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {respondida && (
-          <div className={`explicacion ${resp[actual.id] === actual.a ? "ok" : "mal"}`}>
-            <strong>
-              {resp[actual.id] === actual.a
-                ? "¡Correcto!"
-                : `Incorrecto. La respuesta correcta es la ${LETRAS[actual.a]}.`}
-            </strong>
-            <p>{actual.e}</p>
+      {!actual ? (
+        <p className="vacio">{t(lang, "sinPreguntas")}</p>
+      ) : (
+        <>
+          <div className="progreso" aria-hidden="true">
+            <div style={{ width: `${progreso}%` }} />
           </div>
-        )}
-      </article>
+          <p className="contador">
+            {t(lang, "contador", { a: idx + 1, b: lista.length })}
+          </p>
 
-      <div className="acciones">
-        <button type="button" className="btn ghost" onClick={anterior} disabled={idx === 0}>
-          ← Anterior
-        </button>
-        <button type="button" className="btn" onClick={siguiente}>
-          {idx === lista.length - 1 ? "Ver resultado" : "Siguiente →"}
-        </button>
-      </div>
+          <article className="tarjeta fade-in" key={actual.id}>
+            <span className="chip">
+              {modo === "casos" ? `${t(lang, "casoLabel")} · ${t(lang, "dificultad")}` : `${t(lang, "modulo")} ${actual.m} · ${nombreModulo(actual.m)}`}
+            </span>
+            {actual.caso && <p className="caso">{actual.caso}</p>}
+            <h2 className="pregunta">{actual.q}</h2>
 
-      <p className="atajos">
-        Atajos: <kbd>1</kbd>–<kbd>4</kbd> responder · <kbd>Enter</kbd> siguiente · <kbd>←</kbd>
-        <kbd>→</kbd> navegar
-      </p>
+            <div className="opciones">
+              {actual.o.map((texto, i) => {
+                const elegida = resp[actual.id] === i;
+                const correcta = actual.a === i;
+                let estado = "";
+                if (respondida) {
+                  if (correcta) estado = "correcta";
+                  else if (elegida) estado = "incorrecta";
+                }
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`opcion ${estado}`}
+                    disabled={respondida}
+                    onClick={() => elegir(i)}
+                  >
+                    <span className="letra">{LETRAS[i]}</span>
+                    <span>{texto}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {respondida && (
+              <div className={`explicacion ${resp[actual.id] === actual.a ? "ok" : "mal"}`}>
+                <strong>
+                  {resp[actual.id] === actual.a
+                    ? t(lang, "correcto")
+                    : t(lang, "incorrecto", { l: LETRAS[actual.a] })}
+                </strong>
+                <p>{actual.e}</p>
+              </div>
+            )}
+          </article>
+
+          <div className="acciones">
+            <button type="button" className="btn ghost" onClick={anterior} disabled={idx === 0}>
+              {t(lang, "anterior")}
+            </button>
+            <button type="button" className="btn" onClick={siguiente}>
+              {idx === lista.length - 1 ? t(lang, "verResultado") : t(lang, "siguiente")}
+            </button>
+          </div>
+
+          <p className="atajos">
+            {t(lang, "atajos", { r: "1–4", e: "Enter", n: "← →" })}
+          </p>
+        </>
+      )}
     </section>
   );
 }
 
-function Resultado({ lista, resp, onReiniciar }) {
+function Resultado({ lang, lista, resp, onReiniciar }) {
   const aciertos = lista.filter((q) => resp[q.id] === q.a).length;
-  const pct = Math.round((aciertos / lista.length) * 100);
+  const pct = lista.length ? Math.round((aciertos / lista.length) * 100) : 0;
   const fallos = lista.filter((q) => resp[q.id] !== undefined && resp[q.id] !== q.a);
 
   const porModulo = MODULOS.map((m) => {
@@ -163,24 +223,21 @@ function Resultado({ lista, resp, onReiniciar }) {
   return (
     <section className="resultado">
       <article className="tarjeta fade-in">
-        <p className="chip">Resultado</p>
+        <p className="chip">{t(lang, "resultado")}</p>
         <div className="marcador">
           {aciertos}
           <span>/{lista.length}</span>
         </div>
         <p className="veredicto">
-          {pct}% de aciertos.{" "}
-          {pct >= 70
-            ? "Por encima del 70 %, la nota de aprobado de la revalidación del NI. Ojo: es un simulacro, no el examen real."
-            : "Por debajo del 70 %. Repasa los módulos con menos aciertos antes de presentarte."}
+          {t(lang, "aciertos", { p: pct })} {pct >= 70 ? t(lang, "aprobado") : t(lang, "reprobado")}
         </p>
 
-        <h3>Aciertos por módulo</h3>
+        <h3>{t(lang, "porModulo")}</h3>
         <ul className="barras">
           {porModulo.map((m) => (
             <li key={m.id}>
               <span>
-                {m.id}. {m.nombre}
+                {m.id}. {m.nombre[lang]}
               </span>
               <div className="barra">
                 <div style={{ width: `${(m.ok / m.total) * 100}%` }} />
@@ -194,13 +251,15 @@ function Resultado({ lista, resp, onReiniciar }) {
 
         {fallos.length > 0 && (
           <>
-            <h3>Para repasar ({fallos.length})</h3>
+            <h3>
+              {t(lang, "paraRepasar")} ({fallos.length})
+            </h3>
             <ol className="fallos">
               {fallos.map((q) => (
                 <li key={q.id}>
                   <strong>{q.q}</strong>
                   <p>
-                    Tu respuesta: {LETRAS[resp[q.id]]}. Correcta: {LETRAS[q.a]}. {q.e}
+                    {t(lang, "tuRespuesta", { t: LETRAS[resp[q.id]], c: LETRAS[q.a] })} {q.e}
                   </p>
                 </li>
               ))}
@@ -209,7 +268,7 @@ function Resultado({ lista, resp, onReiniciar }) {
         )}
 
         <button type="button" className="btn" onClick={onReiniciar}>
-          Repetir práctica
+          {t(lang, "repetir")}
         </button>
       </article>
     </section>

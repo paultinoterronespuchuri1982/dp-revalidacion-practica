@@ -1,21 +1,60 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Quiz from "../components/Quiz";
 import Guia from "../components/Guia";
+import { t } from "../data/i18n";
 
 export default function Home() {
   const [vista, setVista] = useState("quiz");
+  const [lang, setLang] = useState("es");
+
+  // Recuerda el idioma elegido (si el navegador lo permite) y actualiza <html lang>.
+  useEffect(() => {
+    try {
+      const guardado = window.localStorage.getItem("dp-lang");
+      if (guardado === "es" || guardado === "pt") setLang(guardado);
+    } catch {
+      /* almacenamiento no disponible: se usa el idioma por defecto */
+    }
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = lang === "pt" ? "pt-BR" : "es";
+    try {
+      window.localStorage.setItem("dp-lang", lang);
+    } catch {
+      /* ignorar */
+    }
+  }, [lang]);
 
   return (
     <>
       <header className="hero">
         <div className="hero-inner">
-          <p className="eyebrow">Revalidación DPO · Nautical Institute</p>
-          <h1>Evaluador de posicionamiento dinámico</h1>
-          <p className="sub">
-            100 preguntas de práctica por módulo, con la explicación de cada respuesta.
-          </p>
+          <div className="hero-top">
+            <p className="eyebrow">{t(lang, "eyebrow")}</p>
+            <div className="lang" role="group" aria-label="Idioma / Idioma">
+              <button
+                type="button"
+                className={lang === "es" ? "on" : ""}
+                onClick={() => setLang("es")}
+                aria-pressed={lang === "es"}
+              >
+                Español
+              </button>
+              <button
+                type="button"
+                className={lang === "pt" ? "on" : ""}
+                onClick={() => setLang("pt")}
+                aria-pressed={lang === "pt"}
+              >
+                Português
+              </button>
+            </div>
+          </div>
+          <h1>{t(lang, "titulo")}</h1>
+          <p className="sub">{t(lang, "sub")}</p>
         </div>
       </header>
 
@@ -25,22 +64,22 @@ export default function Home() {
           className={vista === "quiz" ? "tab activa" : "tab"}
           onClick={() => setVista("quiz")}
         >
-          Practicar
+          {t(lang, "tabPracticar")}
         </button>
         <button
           type="button"
           className={vista === "guia" ? "tab activa" : "tab"}
           onClick={() => setVista("guia")}
         >
-          Guía de estudio
+          {t(lang, "tabGuia")}
         </button>
       </nav>
 
-      <main className="contenedor">{vista === "quiz" ? <Quiz /> : <Guia />}</main>
+      <main className="contenedor">
+        {vista === "quiz" ? <Quiz lang={lang} /> : <Guia lang={lang} />}
+      </main>
 
-      <footer className="pie">
-        Material de repaso, no sustituye el temario oficial del NI. Verifica siempre contra tu material del curso.
-      </footer>
+      <footer className="pie">{t(lang, "pie")}</footer>
     </>
   );
 }
