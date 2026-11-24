@@ -12,6 +12,23 @@ import { t } from "../data/i18n";
 
 const LETRAS = ["A", "B", "C", "D"];
 
+// Todas las preguntas juntas, mezcladas con una semilla fija: el orden es estable
+// (no cambia al recargar ni al cambiar de idioma) pero no sigue la fuente original.
+const TODAS_PREGUNTAS = [...PRACTICOS, ...INTEGRADOS, ...MATERIALES, ...PDF_EXPERTO];
+const ORDEN_PREGUNTAS = (() => {
+  const idx = TODAS_PREGUNTAS.map((_, i) => i);
+  let semilla = 20260401;
+  const aleatorio = () => {
+    semilla = (semilla * 1664525 + 1013904223) >>> 0;
+    return semilla / 4294967296;
+  };
+  for (let i = idx.length - 1; i > 0; i--) {
+    const j = Math.floor(aleatorio() * (i + 1));
+    [idx[i], idx[j]] = [idx[j], idx[i]];
+  }
+  return idx;
+})();
+
 // Nombre del módulo en el idioma pedido (cae al español si falta).
 function nombre(m, lang) {
   return m?.nombre[lang] ?? m?.nombre.es ?? "";
@@ -41,7 +58,7 @@ function construirLista(modo, lang) {
       fuente: c.fuente,
     }));
   }
-  return [...PRACTICOS, ...INTEGRADOS, ...MATERIALES, ...PDF_EXPERTO].map((p, id) => ({
+  return ORDEN_PREGUNTAS.map((fuente, id) => TODAS_PREGUNTAS[fuente]).map((p, id) => ({
     id,
     m: p.m,
     a: p.a,
