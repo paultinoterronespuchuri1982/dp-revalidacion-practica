@@ -1,20 +1,9 @@
 # Evaluador DP – Práctica de revalidación
 
-Práctica de 100 preguntas tipo test sobre posicionamiento dinámico (DP), con la explicación de cada respuesta y una guía de estudio basada en los módulos del curso de inducción del Nautical Institute.
+## 👉 [Abrir el evaluador](https://paultinoterronespuchuri1982.github.io/dp-revalidacion-practica/)
 
-## Desarrollo local
+Práctica de 100 preguntas tipo test sobre posicionamiento dinámico (DP), con la explicación de cada respuesta y una guía de estudio basada en los siete módulos del curso de inducción del Nautical Institute.
 
-```bash
-npm install
-npm run dev
-```
-
-## Publicación
-
-El repo se despliega solo con GitHub Actions (`.github/workflows/pages.yml`) cada vez que se hace push a `main`.
-
-Para activarlo una sola vez: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-
-La página queda en: https://paultinoterronespuchuri1982.github.io/dp-revalidacion-practica/
+No hace falta instalar nada: se usa desde el navegador del celular o de la computadora.
 
 Aviso: es material de repaso. No sustituye el temario oficial del Nautical Institute.
