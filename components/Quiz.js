@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { PREGUNTAS } from "../data/preguntas";
 import { PREGUNTAS_PT } from "../data/preguntas_pt";
 import { CASOS } from "../data/casos";
+import { CIRCULARES } from "../data/circulares";
 import { MODULOS } from "../data/modulos";
 import { t } from "../data/i18n";
 
@@ -17,6 +18,17 @@ function textos(lang, item) {
 }
 
 function construirLista(modo, lang) {
+  if (modo === "circulares") {
+    return CIRCULARES.map((c, i) => ({
+      id: 2000 + i,
+      m: c.m,
+      a: c.a,
+      q: c[lang].q,
+      o: c[lang].o,
+      e: c[lang].e,
+      ref: c.ref,
+    }));
+  }
   if (modo === "casos") {
     return CASOS.map((c, i) => ({
       id: 1000 + i,
@@ -120,6 +132,13 @@ export default function Quiz({ lang }) {
           >
             {t(lang, "modoCasos")}
           </button>
+          <button
+            type="button"
+            className={modo === "circulares" ? "on" : ""}
+            onClick={() => reiniciar("circulares", "todos")}
+          >
+            {t(lang, "modoCirculares")}
+          </button>
         </div>
         <label className="select-wrap">
           <span>{t(lang, "modulo")}</span>
@@ -147,7 +166,11 @@ export default function Quiz({ lang }) {
 
           <article className="tarjeta fade-in" key={actual.id}>
             <span className="chip">
-              {modo === "casos" ? `${t(lang, "casoLabel")} · ${t(lang, "dificultad")}` : `${t(lang, "modulo")} ${actual.m} · ${nombreModulo(actual.m)}`}
+              {modo === "casos"
+                ? `${t(lang, "casoLabel")} · ${t(lang, "dificultad")}`
+                : modo === "circulares"
+                  ? `MSC.1/Circ.1580 · ${actual.ref}`
+                  : `${t(lang, "modulo")} ${actual.m} · ${nombreModulo(actual.m)}`}
             </span>
             {actual.caso && <p className="caso">{actual.caso}</p>}
             <h2 className="pregunta">{actual.q}</h2>
