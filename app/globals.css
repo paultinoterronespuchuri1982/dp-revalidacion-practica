@@ -234,3 +234,10 @@
   color: oklch(0.92 0.02 275); font-size: 0.97rem;
 }
 .guia .lista li { line-height: 1.5; }
+
+/* Selector de idioma: icono de traducción (globo) junto a la etiqueta English */
+.lang .icono-idioma {
+  display: inline-block;
+  vertical-align: -3px;
+  margin-right: 0.3em;
+}

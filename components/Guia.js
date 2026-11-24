@@ -12,10 +12,10 @@ export default function Guia({ lang }) {
             <details key={m.id} className="modulo" open={m.id === 1}>
               <summary>
                 <span className="num">{m.id}</span>
-                {m.nombre[lang]}
+                {m.nombre[lang] ?? m.nombre.es}
               </summary>
               <ul>
-                {m.resultados[lang].map((r) => (
+                {(m.resultados[lang] ?? m.resultados.es).map((r) => (
                   <li key={r}>{r}</li>
                 ))}
               </ul>

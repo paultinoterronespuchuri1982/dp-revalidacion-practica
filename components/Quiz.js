@@ -10,6 +10,11 @@ import { t } from "../data/i18n";
 
 const LETRAS = ["A", "B", "C", "D"];
 
+// Nombre del módulo en el idioma pedido (cae al español si falta).
+function nombre(m, lang) {
+  return m?.nombre[lang] ?? m?.nombre.es ?? "";
+}
+
 // Devuelve el texto de una pregunta en el idioma pedido (cae al español si falta).
 function textos(lang, item) {
   if (item.caso !== undefined) return item; // ya viene resuelto para el idioma
@@ -23,9 +28,9 @@ function construirLista(modo, lang) {
       id: 2000 + i,
       m: c.m,
       a: c.a,
-      q: c[lang].q,
-      o: c[lang].o,
-      e: c[lang].e,
+      q: (c[lang] ?? c.es).q,
+      o: (c[lang] ?? c.es).o,
+      e: (c[lang] ?? c.es).e,
       ref: c.ref,
     }));
   }
@@ -34,10 +39,10 @@ function construirLista(modo, lang) {
       id: 1000 + i,
       m: c.m,
       a: c.a,
-      caso: c[lang].caso,
-      q: c[lang].q,
-      o: c[lang].o,
-      e: c[lang].e,
+      caso: (c[lang] ?? c.es).caso,
+      q: (c[lang] ?? c.es).q,
+      o: (c[lang] ?? c.es).o,
+      e: (c[lang] ?? c.es).e,
       fuente: c.fuente,
     }));
   }
@@ -111,7 +116,7 @@ export default function Quiz({ lang }) {
     );
   }
 
-  const nombreModulo = (id) => MODULOS.find((m) => m.id === id)?.nombre[lang] ?? "";
+  const nombreModulo = (id) => nombre(MODULOS.find((m) => m.id === id), lang);
   const progreso = lista.length ? ((idx + 1) / lista.length) * 100 : 0;
 
   return (
@@ -146,7 +151,7 @@ export default function Quiz({ lang }) {
             <option value="todos">{t(lang, "todos")}</option>
             {MODULOS.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.id}. {m.nombre[lang]}
+                {m.id}. {nombre(m, lang)}
               </option>
             ))}
           </select>
@@ -260,7 +265,7 @@ function Resultado({ lang, lista, resp, onReiniciar }) {
           {porModulo.map((m) => (
             <li key={m.id}>
               <span>
-                {m.id}. {m.nombre[lang]}
+                {m.id}. {nombre(m, lang)}
               </span>
               <div className="barra">
                 <div style={{ width: `${(m.ok / m.total) * 100}%` }} />

@@ -13,14 +13,14 @@ export default function Home() {
   useEffect(() => {
     try {
       const guardado = window.localStorage.getItem("dp-lang");
-      if (guardado === "es" || guardado === "pt") setLang(guardado);
+      if (guardado === "es" || guardado === "pt" || guardado === "en") setLang(guardado);
     } catch {
       /* almacenamiento no disponible: se usa el idioma por defecto */
     }
   }, []);
 
   useEffect(() => {
-    document.documentElement.lang = lang === "pt" ? "pt-BR" : "es";
+    document.documentElement.lang = lang === "pt" ? "pt-BR" : lang === "en" ? "en" : "es";
     try {
       window.localStorage.setItem("dp-lang", lang);
     } catch {
@@ -34,7 +34,7 @@ export default function Home() {
         <div className="hero-inner">
           <div className="hero-top">
             <p className="eyebrow">{t(lang, "eyebrow")}</p>
-            <div className="lang" role="group" aria-label="Idioma / Idioma">
+            <div className="lang" role="group" aria-label="Idioma · Idioma · Language">
               <button
                 type="button"
                 className={lang === "es" ? "on" : ""}
@@ -50,6 +50,28 @@ export default function Home() {
                 aria-pressed={lang === "pt"}
               >
                 Português
+              </button>
+              <button
+                type="button"
+                className={lang === "en" ? "on" : ""}
+                onClick={() => setLang("en")}
+                aria-pressed={lang === "en"}
+                title="English"
+              >
+                <svg
+                  className="icono-idioma"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18" />
+                </svg>
+                English
               </button>
             </div>
           </div>
